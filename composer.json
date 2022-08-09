@@ -1,0 +1,22 @@
+{
+  "name": "ergnuor/domain-model",
+  "description": "",
+  "keywords": ["domain", "model"],
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Denis Tarasov",
+      "email": "brokeneye@mail.ru"
+    }
+  ],
+  "require": {
+    "php": ">=8.1"
+  },
+  "autoload": {
+    "psr-4": {"Ergnuor\\DomainModel\\": "src/"}
+  },
+  "config": {
+    "sort-packages": true
+  }
+}
