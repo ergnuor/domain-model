@@ -16,6 +16,8 @@ namespace Ergnuor\DomainModel\Serializer\Normalizer;
  * Поэтому проблема была решена путем создания отдельных нормализаторов под каждый сериализатор.
  *
  * UPD: вообще в итоге еще был создан кастомный базовый нормализатор @see \Ergnuor\DomainModel\Serializer\Normalizer\BaseObjectNormalizer
+ *
+ * @deprecated Не используется. Сохранен ради комментария...
  */
 class ObjectNormalizer extends \Ergnuor\DomainModel\Serializer\Normalizer\BaseObjectNormalizer
 {
