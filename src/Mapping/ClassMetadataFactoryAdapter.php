@@ -11,14 +11,23 @@ use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 class ClassMetadataFactoryAdapter implements ClassMetadataFactoryAdapterInterface
 {
     private Reader $reader;
-    private string $entityDir;
+    private array $entityDirs;
 
     public function __construct(
         Reader $reader,
-        string $entityDir
+        array $entityDirs
     ) {
         $this->reader = new IndexedReader($reader);
-        $this->entityDir = $entityDir;
+        $this->setEntityDirs($entityDirs);
+    }
+
+    private function setEntityDirs(array $entityDirs): void
+    {
+        if (empty($entityDirs)) {
+            throw new \RuntimeException('Entity dirs can not be empty');
+        }
+
+        $this->entityDirs = $entityDirs;
     }
 
     public function getClassNames(): array
@@ -26,45 +35,48 @@ class ClassMetadataFactoryAdapter implements ClassMetadataFactoryAdapterInterfac
         $classes = [];
         $includedFiles = [];
 
-        if (!is_dir($this->entityDir)) {
-            throw new \RuntimeException("Directory not exists '{$this->entityDir}");
-        }
+        foreach ($this->entityDirs as $entityDir) {
+
+            if (!is_dir($entityDir)) {
+                throw new \RuntimeException("Directory not exists '{$entityDir}");
+            }
 
 //        $iterator = new \RegexIterator(
-//            new \DirectoryIterator($this->entityDir),
+//            new \DirectoryIterator($entityDir),
 //            '/^.+.php$/i',
 //            \RecursiveRegexIterator::GET_MATCH
 //        );
 
-        $iterator = new \RegexIterator(
-            new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($this->entityDir, \FilesystemIterator::SKIP_DOTS),
-                \RecursiveIteratorIterator::LEAVES_ONLY
-            ),
-            '/^.+.php$/i',
-            \RecursiveRegexIterator::GET_MATCH
-        );
+            $iterator = new \RegexIterator(
+                new \RecursiveIteratorIterator(
+                    new \RecursiveDirectoryIterator($entityDir, \FilesystemIterator::SKIP_DOTS),
+                    \RecursiveIteratorIterator::LEAVES_ONLY
+                ),
+                '/^.+.php$/i',
+                \RecursiveRegexIterator::GET_MATCH
+            );
 
 //        $iterator =  new \RecursiveIteratorIterator(
-//                new \RecursiveDirectoryIterator($this->entityDir, \FilesystemIterator::SKIP_DOTS),
+//                new \RecursiveDirectoryIterator($entityDir, \FilesystemIterator::SKIP_DOTS),
 //                \RecursiveIteratorIterator::LEAVES_ONLY
 //            );
 
-//        $iterator = new \DirectoryIterator($this->entityDir);
+//        $iterator = new \DirectoryIterator($entityDir);
 
-        foreach ($iterator as $file) {
-//            $sourceFile = $this->entityDir . '/' . $file[0];
-            $sourceFile = $file[0];
+            foreach ($iterator as $file) {
+//            $sourceFile = $entityDir . '/' . $file[0];
+                $sourceFile = $file[0];
 
-            if (!preg_match('(^phar:)i', $sourceFile)) {
-                $sourceFile = realpath($sourceFile);
-            }
+                if (!preg_match('(^phar:)i', $sourceFile)) {
+                    $sourceFile = realpath($sourceFile);
+                }
 
 //            dd($sourceFile);
 
-            require_once $sourceFile;
+                require_once $sourceFile;
 
-            $includedFiles[] = $sourceFile;
+                $includedFiles[] = $sourceFile;
+            }
         }
 
 //        dd($includedFiles);
