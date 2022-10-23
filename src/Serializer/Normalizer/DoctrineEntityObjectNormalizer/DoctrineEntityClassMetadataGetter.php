@@ -8,18 +8,38 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class DoctrineEntityClassMetadataGetter implements DoctrineEntityClassMetadataGetterInterface
 {
-    private EntityManagerInterface $entityManager;
+    /** @var EntityManagerInterface[] */
+    private $entityManagers;
 
     public function __construct(
-        EntityManagerInterface $entityManager,
+        $entityManagers,
     ) {
-        $this->entityManager = $entityManager;
+        $this->setEntityManagers($entityManagers);
+    }
+
+    private function setEntityManagers(array $entityManagers): void
+    {
+        foreach ($entityManagers as $entityManager) {
+            if (!($entityManager instanceof EntityManagerInterface)) {
+                throw new \RuntimeException(
+                    sprintf(
+                        'Expected "%s" instance in "%s"',
+                        EntityManagerInterface::class,
+                        get_class($this)
+                    )
+                );
+            }
+
+            $this->entityManagers[] = $entityManager;
+        }
     }
 
     public function getClassMetadata(string $className): ?ClassMetadata
     {
-        if ($this->entityManager->getMetadataFactory()->hasMetadataFor($className)) {
-            return $this->entityManager->getClassMetadata($className);
+        foreach ($this->entityManagers as $entityManager) {
+            if ($entityManager->getMetadataFactory()->hasMetadataFor($className)) {
+                return $entityManager->getClassMetadata($className);
+            }
         }
 
         return null;
