@@ -3,42 +3,56 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\Transaction;
 
-use Doctrine\ORM\EntityManagerInterface;
+use Ergnuor\DomainModel\DependencyInjection\DoctrineEntityListDependencyTrait;
 
 class DoctrineTransactionManager implements TransactionManagerInterface
 {
-    private EntityManagerInterface $entityManager;
+    use DoctrineEntityListDependencyTrait;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    private bool $isTransactionActive = false;
+
+    public function __construct(array $entityManagers)
     {
-        $this->entityManager = $entityManager;
+        $this->setEntityManagers($entityManagers);
     }
 
     public function beginTransaction(): void
     {
-        $this->entityManager->getConnection()->beginTransaction();
+        foreach ($this->entityManagers as $entityManager) {
+            $entityManager->getConnection()->beginTransaction();
+        }
+
+        $this->isTransactionActive = true;
     }
 
     public function commitTransaction(): void
     {
-        if (!$this->isTransactionActive()) {
+        if (!$this->isTransactionActive) {
             throw new \RuntimeException('Trying to commit not active global transaction');
         }
 
-        $this->entityManager->getConnection()->commit();
+        foreach ($this->entityManagers as $entityManager) {
+            $entityManager->getConnection()->commit();
+        }
+
+        $this->isTransactionActive = false;
     }
 
     public function rollbackTransaction(): void
     {
-        if (!$this->isTransactionActive()) {
+        if (!$this->isTransactionActive) {
             throw new \RuntimeException('Trying to rollback not active global transaction');
         }
 
-        $this->entityManager->getConnection()->rollBack();
+        foreach ($this->entityManagers as $entityManager) {
+            $entityManager->getConnection()->rollBack();
+        }
+
+        $this->isTransactionActive = false;
     }
 
     public function isTransactionActive(): bool
     {
-        return $this->entityManager->getConnection()->isTransactionActive();
+        return $this->isTransactionActive;
     }
 }
