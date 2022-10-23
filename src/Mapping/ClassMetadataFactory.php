@@ -62,8 +62,6 @@ class ClassMetadataFactory implements ClassMetadataFactoryInterface
         $cacheKey = $this->getCacheKey($className);
         $cachedMetadata = $this->cache->getItem($cacheKey)->get();
 
-        $this->adapter->isCorrectCachedInstance($cachedMetadata);
-
         if ($this->adapter->isCorrectCachedInstance($cachedMetadata)) {
             $this->loadedMetadata[$className] = $cachedMetadata;
 
