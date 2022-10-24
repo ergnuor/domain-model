@@ -24,9 +24,11 @@ class DoctrineEntityObjectNormalizer extends \Ergnuor\DomainModel\Serializer\Nor
         PropertyTypeExtractorInterface $propertyTypeExtractor = null,
         ClassDiscriminatorResolverInterface $classDiscriminatorResolver = null,
         callable $objectClassResolver = null,
-        array $defaultContext = null,
-        DoctrineEntityClassMetadataGetterInterface $classMetadataGetter
+        array $defaultContext = [],
+        DoctrineEntityClassMetadataGetterInterface $classMetadataGetter = null
     ) {
+        //todo move $classMetadataGetter parameter to the top of the list, due to it required
+
         parent::__construct($classMetadataFactory, $nameConverter, $propertyAccessor, $propertyTypeExtractor,
             $classDiscriminatorResolver, $objectClassResolver, $defaultContext);
 
