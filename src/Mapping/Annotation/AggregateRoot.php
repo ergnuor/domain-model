@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\Mapping\Annotation;
 
+use Attribute;
+use Ergnuor\Mapping\Annotation\AnnotationInterface;
+
 /**
  * @Annotation
  * @NamedArgumentConstructor()
  * @Target({"CLASS"})
  */
-class AggregateRoot
+#[Attribute(Attribute::TARGET_CLASS)]
+class AggregateRoot implements AnnotationInterface
 {
     public string $repositoryClass;
 

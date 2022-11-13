@@ -7,7 +7,7 @@ namespace Ergnuor\DomainModel\EntityManager;
 use Ergnuor\DomainModel\Entity\DomainAggregateInterface;
 use Ergnuor\DomainModel\Repository\DomainRepositoryInterface;
 use Ergnuor\DomainModel\Mapping\ClassMetadataInterface;
-use Ergnuor\DomainModel\Mapping\ClassMetadataFactoryInterface;
+use Ergnuor\Mapping\ClassMetadataFactoryInterface;
 use Psr\Container\ContainerInterface;
 
 class EntityManager implements EntityManagerInterface

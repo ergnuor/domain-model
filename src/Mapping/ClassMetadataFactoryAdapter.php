@@ -3,110 +3,17 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\Mapping;
 
-use Ergnuor\DomainModel\Mapping\ClassMetadataFactoryAdapterInterface;
-use Doctrine\Common\Annotations\IndexedReader;
-use Doctrine\Common\Annotations\Reader;
+use Ergnuor\Mapping\AbstractClassMetadataFactoryAdapter;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
+use Ergnuor\DomainModel\Mapping\Annotation;
 
-class ClassMetadataFactoryAdapter implements ClassMetadataFactoryAdapterInterface
+class ClassMetadataFactoryAdapter extends AbstractClassMetadataFactoryAdapter
 {
-    private Reader $reader;
-    private array $entityDirs;
-
-    public function __construct(
-        Reader $reader,
-        array $entityDirs
-    ) {
-        $this->reader = new IndexedReader($reader);
-        $this->setEntityDirs($entityDirs);
-    }
-
-    private function setEntityDirs(array $entityDirs): void
-    {
-        if (empty($entityDirs)) {
-            throw new \RuntimeException('Entity dirs can not be empty');
-        }
-
-        $this->entityDirs = $entityDirs;
-    }
-
-    public function getClassNames(): array
-    {
-        $classes = [];
-        $includedFiles = [];
-
-        foreach ($this->entityDirs as $entityDir) {
-
-            if (!is_dir($entityDir)) {
-                throw new \RuntimeException("Directory not exists '{$entityDir}");
-            }
-
-//        $iterator = new \RegexIterator(
-//            new \DirectoryIterator($entityDir),
-//            '/^.+.php$/i',
-//            \RecursiveRegexIterator::GET_MATCH
-//        );
-
-            $iterator = new \RegexIterator(
-                new \RecursiveIteratorIterator(
-                    new \RecursiveDirectoryIterator($entityDir, \FilesystemIterator::SKIP_DOTS),
-                    \RecursiveIteratorIterator::LEAVES_ONLY
-                ),
-                '/^.+.php$/i',
-                \RecursiveRegexIterator::GET_MATCH
-            );
-
-//        $iterator =  new \RecursiveIteratorIterator(
-//                new \RecursiveDirectoryIterator($entityDir, \FilesystemIterator::SKIP_DOTS),
-//                \RecursiveIteratorIterator::LEAVES_ONLY
-//            );
-
-//        $iterator = new \DirectoryIterator($entityDir);
-
-            foreach ($iterator as $file) {
-//            $sourceFile = $entityDir . '/' . $file[0];
-                $sourceFile = $file[0];
-
-                if (!preg_match('(^phar:)i', $sourceFile)) {
-                    $sourceFile = realpath($sourceFile);
-                }
-
-//            dd($sourceFile);
-
-                require_once $sourceFile;
-
-                $includedFiles[] = $sourceFile;
-            }
-        }
-
-//        dd($includedFiles);
-
-        $declared = get_declared_classes();
-
-//        dd($declared);
-
-        foreach ($declared as $className) {
-            $rc = new \ReflectionClass($className);
-            $sourceFile = $rc->getFileName();
-            if (
-                $rc->isInterface() ||
-                !in_array($sourceFile, $includedFiles) ||
-                $this->isTransient($className)
-            ) {
-                continue;
-            }
-
-            $classes[] = $className;
-        }
-
-        return $classes;
-    }
-
-    private function isTransient(string $className): bool
+    protected function isTransient(string $className): bool
     {
         $classAnnotations = $this->reader->getClassAnnotations(new \ReflectionClass($className));
 
-        return !isset($classAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\AggregateRoot::class]) && !isset($classAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\Entity::class]);
+        return !isset($classAnnotations[Annotation\AggregateRoot::class]) && !isset($classAnnotations[Annotation\Entity::class]);
     }
 
     public function isCorrectCachedInstance($cachedMetadata): bool
@@ -133,28 +40,28 @@ class ClassMetadataFactoryAdapter implements ClassMetadataFactoryAdapterInterfac
         $classAnnotations = $this->reader->getClassAnnotations($classNameReflectionClass);
 
         if (
-            (isset($classAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\AggregateRoot::class]) && isset($classAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\Entity::class])) ||
-            (!isset($classAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\AggregateRoot::class]) && !isset($classAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\Entity::class]))
+            (isset($classAnnotations[Annotation\AggregateRoot::class]) && isset($classAnnotations[Annotation\Entity::class])) ||
+            (!isset($classAnnotations[Annotation\AggregateRoot::class]) && !isset($classAnnotations[Annotation\Entity::class]))
         ) {
-            $annotationAggregateRootClass = \Ergnuor\DomainModel\Mapping\Annotation\AggregateRoot::class;
-            $annotationEntityClass = \Ergnuor\DomainModel\Mapping\Annotation\Entity::class;
+            $annotationAggregateRootClass = Annotation\AggregateRoot::class;
+            $annotationEntityClass = Annotation\Entity::class;
             throw new \RuntimeException("Entity '$className' should be marked either as '{$annotationAggregateRootClass}' or '{$annotationEntityClass}'");
         }
 
         $classMetadata = new ClassMetadata($className);
 
-        if (isset($classAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\AggregateRoot::class])) {
-            $aggregateRootAnnotation = $classAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\AggregateRoot::class];
-            assert($aggregateRootAnnotation instanceof \Ergnuor\DomainModel\Mapping\Annotation\AggregateRoot);
+        if (isset($classAnnotations[Annotation\AggregateRoot::class])) {
+            $aggregateRootAnnotation = $classAnnotations[Annotation\AggregateRoot::class];
+            assert($aggregateRootAnnotation instanceof Annotation\AggregateRoot);
 
             $classMetadata->setRepositoryClass($aggregateRootAnnotation->repositoryClass);
             $classMetadata->setPersisterClass($aggregateRootAnnotation->persisterClass);
             $classMetadata->setIsAggregateRoot(true);
         }
 
-        if (isset($classAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\Entity::class])) {
-            $entityAnnotation = $classAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\Entity::class];
-            assert($entityAnnotation instanceof \Ergnuor\DomainModel\Mapping\Annotation\Entity);
+        if (isset($classAnnotations[Annotation\Entity::class])) {
+            $entityAnnotation = $classAnnotations[Annotation\Entity::class];
+            assert($entityAnnotation instanceof Annotation\Entity);
 
             $classMetadata->setPersisterClass($entityAnnotation->persisterClass);
             $classMetadata->setIsAggregateRoot(false);
@@ -180,7 +87,7 @@ class ClassMetadataFactoryAdapter implements ClassMetadataFactoryAdapterInterfac
 
                 $propertyAnnotations = $this->reader->getPropertyAnnotations($property);
 
-                if (isset($propertyAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\Internal::class])) {
+                if (isset($propertyAnnotations[Annotation\Internal::class])) {
                     continue;
                 }
 
@@ -206,17 +113,17 @@ class ClassMetadataFactoryAdapter implements ClassMetadataFactoryAdapterInterfac
                     ],
                 ];
 
-                if (isset($propertyAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\Entity::class])) {
-                    $entityAnnotation = $propertyAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\Entity::class];
-                    assert($entityAnnotation instanceof \Ergnuor\DomainModel\Mapping\Annotation\Entity);
+                if (isset($propertyAnnotations[Annotation\Entity::class])) {
+                    $entityAnnotation = $propertyAnnotations[Annotation\Entity::class];
+                    assert($entityAnnotation instanceof Annotation\Entity);
 
                     $fieldMapping['entityClassName'] = $entityAnnotation->className;
                     $fieldMapping['isEntityCollection'] = false;
                 }
 
-                if (isset($propertyAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\EntityCollection::class])) {
-                    $entityCollectionAnnotation = $propertyAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\EntityCollection::class];
-                    assert($entityCollectionAnnotation instanceof \Ergnuor\DomainModel\Mapping\Annotation\EntityCollection);
+                if (isset($propertyAnnotations[Annotation\EntityCollection::class])) {
+                    $entityCollectionAnnotation = $propertyAnnotations[Annotation\EntityCollection::class];
+                    assert($entityCollectionAnnotation instanceof Annotation\EntityCollection);
 
                     $fieldMapping['entityClassName'] = $entityCollectionAnnotation->className;
                     $fieldMapping['isEntityCollection'] = true;
@@ -243,7 +150,7 @@ class ClassMetadataFactoryAdapter implements ClassMetadataFactoryAdapterInterfac
                 $property = $properties[$propertyName];
                 $propertyAnnotations = $this->reader->getPropertyAnnotations($property);
 
-                if (isset($propertyAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\Id::class])) {
+                if (isset($propertyAnnotations[Annotation\Id::class])) {
                     $fieldMappings[$propertyName]['isId'] = true;
                     $isIdFound = true;
                     break;
@@ -263,14 +170,14 @@ class ClassMetadataFactoryAdapter implements ClassMetadataFactoryAdapterInterfac
         foreach ($classNameReflectionClass->getMethods() as $method) {
             $methodAnnotations = $this->reader->getMethodAnnotations($method);
 
-            if (isset($methodAnnotations[\Ergnuor\DomainModel\Mapping\Annotation\FactoryMethod::class])) {
+            if (isset($methodAnnotations[Annotation\FactoryMethod::class])) {
                 if (!$method->isStatic()) {
-                    $annotationText = \Ergnuor\DomainModel\Mapping\Annotation\FactoryMethod::class;
+                    $annotationText = Annotation\FactoryMethod::class;
                     throw new \RuntimeException("Only static methods can be marked as '{$annotationText}' in '$className'");
                 }
 
                 if ($classMetadata->getStaticFactoryMethodName() !== null) {
-                    $annotationText = \Ergnuor\DomainModel\Mapping\Annotation\FactoryMethod::class;
+                    $annotationText = Annotation\FactoryMethod::class;
                     throw new \RuntimeException("Only one method can be marked as '{$annotationText}' in '$className'");
                 }
 

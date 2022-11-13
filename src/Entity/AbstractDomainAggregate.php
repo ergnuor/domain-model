@@ -9,9 +9,7 @@ use Ergnuor\DomainModel\Mapping\Annotation;
 
 abstract class AbstractDomainAggregate implements DomainAggregateInterface
 {
-    /**
-     * @Annotation\Internal
-     */
+    #[Annotation\Internal]
     private ?EventBag $eventBag = null;
 
     final public function getEventBag(): EventBag

@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\Mapping\Annotation;
 
+use Attribute;
+use Ergnuor\Mapping\Annotation\AnnotationInterface;
+
 /**
  * @Annotation
  * @NamedArgumentConstructor()
  * @Target({"PROPERTY"})
  */
-class EntityCollection
+#[Attribute(Attribute::TARGET_PROPERTY)]
+class EntityCollection implements AnnotationInterface
 {
     public string $className;
 
