@@ -4,19 +4,19 @@ declare(strict_types=1);
 namespace Ergnuor\DomainModel\DataAccess\QueryExecutor;
 
 use Ergnuor\DomainModel\DataAccess\Expression\ExpressionInterface;
-use Ergnuor\DomainModel\Serializer\JsonSerializerInterface;
 use Ergnuor\DomainModel\DataAccess\ExpressionMapper\DoctrineExpressionMapper;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\QueryBuilder;
+use Symfony\Component\Serializer\Serializer;
 
 abstract class AbstractDoctrineQueryExecutor implements QueryExecutorInterface
 {
     private DoctrineExpressionMapper $expressionMapper;
-    private ?JsonSerializerInterface $serializer;
+    private ?Serializer $serializer;
 
     public function __construct(
         DoctrineExpressionMapper $expressionMapper,
-        JsonSerializerInterface $serializer = null,
+        Serializer $serializer = null,
     ) {
         $this->expressionMapper = $expressionMapper;
         $this->serializer = $serializer;

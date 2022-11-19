@@ -6,13 +6,13 @@ namespace Ergnuor\DomainModel\TableDataGateway;
 
 use Ergnuor\DomainModel\DataAccess\Expression\ExpressionInterface;
 use Ergnuor\DomainModel\DataAccess\ExpressionBuilder\ExpressionTrait;
-use Ergnuor\DomainModel\Serializer\JsonSerializerInterface;
+use Symfony\Component\Serializer\Serializer;
 
 trait TableDataGatewayTrait
 {
     use ExpressionTrait;
 
-    protected JsonSerializerInterface $serializer;
+    protected Serializer $serializer;
 
     public function findById(mixed $id): ?object
     {

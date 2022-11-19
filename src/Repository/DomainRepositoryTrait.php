@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Ergnuor\DomainModel\Repository;
 
 use Ergnuor\DomainModel\DataAccess\Expression\ExpressionInterface;
-use Ergnuor\DomainModel\Serializer\JsonSerializerInterface;
 use Ergnuor\DomainModel\EntityManager\EntityManagerInterface;
+use Symfony\Component\Serializer\Serializer;
 
 trait DomainRepositoryTrait
 {
     use RepositoryTrait;
 
     protected EntityManagerInterface $domainEntityManager;
-    protected JsonSerializerInterface $serializer;
+    protected Serializer $serializer;
 
     final protected function doFindBy(
         ?ExpressionInterface $expression = null,

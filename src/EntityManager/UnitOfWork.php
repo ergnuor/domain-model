@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Ergnuor\DomainModel\EntityManager;
 
 use Ergnuor\DomainModel\Transaction\TransactionManagerInterface;
-use Ergnuor\DomainModel\Serializer\JsonSerializerInterface;
 use Ergnuor\DomainModel\Entity\DomainAggregateInterface;
 use Ergnuor\DomainModel\Entity\DomainEntityInterface;
 use Ergnuor\DomainModel\Persister\AggregateRootPersisterInterface;
@@ -20,11 +19,12 @@ use Ergnuor\DomainModel\Serializer\Normalizer\DateTimeNormalizer;
 use Ergnuor\DomainModel\Serializer\Normalizer\DomainEntityNormalizer;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\Serializer\Serializer;
 
 class UnitOfWork implements UnitOfWorkInterface
 {
     private ContainerInterface $persistersLocator;
-    private JsonSerializerInterface $serializer;
+    private Serializer $serializer;
     private EntityManager $domainEntityManager;
     private array $identityMap = [];
 
@@ -42,7 +42,7 @@ class UnitOfWork implements UnitOfWorkInterface
 
     public function __construct(
         ContainerInterface $persistersLocator,
-        JsonSerializerInterface $serializer,
+        Serializer $serializer,
         TransactionManagerInterface $transactionManager,
         EventDispatcherInterface $eventDispatcher
     ) {
@@ -280,6 +280,7 @@ class UnitOfWork implements UnitOfWorkInterface
     {
         return $this->serializer->normalize(
             $aggregateRoot,
+            null,
             [
 //                DateTimeNormalizer::NORMALIZE_AS_OBJECT => true,
                 DomainEntityNormalizer::NORMALIZE_FOR_PERSISTER => true,
@@ -291,6 +292,7 @@ class UnitOfWork implements UnitOfWorkInterface
     {
         return $this->serializer->normalize(
             $entity,
+            null,
             [
 //                DateTimeNormalizer::NORMALIZE_AS_OBJECT => true,
                 DomainEntityNormalizer::NORMALIZE_FOR_PERSISTER => true,
@@ -362,6 +364,7 @@ class UnitOfWork implements UnitOfWorkInterface
             $this->identityMap[$className][$identityKey] = $this->serializer->denormalize(
                 $data,
                 $className,
+                null,
                 $context
             );
         }

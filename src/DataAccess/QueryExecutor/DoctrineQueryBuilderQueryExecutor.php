@@ -4,11 +4,11 @@ declare(strict_types=1);
 namespace Ergnuor\DomainModel\DataAccess\QueryExecutor;
 
 use Ergnuor\DomainModel\DataAccess\Expression\ExpressionInterface;
-use Ergnuor\DomainModel\Serializer\JsonSerializerInterface;
 use Ergnuor\DomainModel\DataAccess\ExpressionMapper\DoctrineExpressionMapper;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Symfony\Component\Serializer\Serializer;
 
 class DoctrineQueryBuilderQueryExecutor extends AbstractDoctrineQueryExecutor
 {
@@ -18,7 +18,7 @@ class DoctrineQueryBuilderQueryExecutor extends AbstractDoctrineQueryExecutor
     public function __construct(
         QueryBuilder $queryBuilder,
         DoctrineExpressionMapper $expressionMapper,
-        JsonSerializerInterface $serializer = null,
+        Serializer $serializer = null,
         int $hydrationMode = \Doctrine\ORM\Query::HYDRATE_OBJECT,
     ) {
         parent::__construct($expressionMapper, $serializer);

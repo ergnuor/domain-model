@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\Repository;
 
-use Ergnuor\DomainModel\Serializer\JsonSerializerInterface;
 use Ergnuor\DomainModel\EntityManager\EntityManagerInterface;
+use Symfony\Component\Serializer\Serializer;
 
 abstract class AbstractDomainRepository implements DomainRepositoryInterface
 {
@@ -13,7 +13,7 @@ abstract class AbstractDomainRepository implements DomainRepositoryInterface
 
     public function __construct(
         EntityManagerInterface $domainEntityManager,
-        JsonSerializerInterface $serializer
+        Serializer $serializer
     )
     {
         $this->domainEntityManager = $domainEntityManager;
