@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\TableDataGateway;
 
-use Ergnuor\DomainModel\DataAccess\Expression\ExpressionInterface;
-use Ergnuor\DomainModel\DataAccess\ExpressionBuilder\ExpressionTrait;
+use Ergnuor\DomainModel\Criteria\Expression\ExpressionInterface;
+use Ergnuor\DomainModel\Criteria\ExpressionHelper\ExpressionNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
 trait TableDataGatewayTrait
 {
-    use ExpressionTrait;
-
     protected Serializer $serializer;
 
     public function findById(mixed $id): ?object
@@ -24,7 +22,7 @@ trait TableDataGatewayTrait
      */
     final public function findOneBy(array|ExpressionInterface $expression = null): ?object
     {
-        $list = $this->getRawListToFindOne($this->normalizeExpression($expression));
+        $list = $this->getRawListToFindOne(ExpressionNormalizer::normalize($expression));
 
         if (count($list) > 1) {
             throw new \RuntimeException('More than one item returned. Expecting one or zero items');
@@ -43,7 +41,7 @@ trait TableDataGatewayTrait
      */
     protected function getRawListToFindOne(?ExpressionInterface $expression = null): array
     {
-        return $this->getRawList($this->normalizeExpression($expression));
+        return $this->getRawList(ExpressionNormalizer::normalize($expression));
     }
 
     /**
@@ -91,7 +89,7 @@ trait TableDataGatewayTrait
         ?int $offset = null
     ): array {
         $rawList = $this->getRawList(
-            $this->normalizeExpression($expression),
+            ExpressionNormalizer::normalize($expression),
             $orderBy,
             $limit,
             $offset
@@ -108,7 +106,7 @@ trait TableDataGatewayTrait
     public function count(array|ExpressionInterface|null $expression = null): int
     {
         return $this->doCount(
-            $this->normalizeExpression($expression)
+            ExpressionNormalizer::normalize($expression)
         );
     }
 

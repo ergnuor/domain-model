@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\Specification;
 
-use Ergnuor\DomainModel\DataAccess\Expression\ExpressionInterface;
+use Ergnuor\DomainModel\Criteria\Expression\ExpressionInterface;
 use Ergnuor\DomainModel\Entity\DomainAggregateInterface;
 
 interface SpecificationInterface

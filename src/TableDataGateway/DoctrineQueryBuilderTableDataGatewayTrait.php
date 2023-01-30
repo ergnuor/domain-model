@@ -3,10 +3,12 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\TableDataGateway;
 
-use Ergnuor\DomainModel\DataAccess\Expression\ExpressionBuilder as expr;
-use Ergnuor\DomainModel\DataAccess\Expression\ExpressionInterface;
-use Ergnuor\DomainModel\DataAccess\ExpressionMapper\DoctrineExpressionMapper;
-use Ergnuor\DomainModel\DataAccess\QueryExecutor\DoctrineQueryBuilderQueryExecutor;
+use Ergnuor\DomainModel\Criteria\ExpressionBuilder as expr;
+use Ergnuor\DomainModel\Criteria\Expression\ExpressionInterface;
+use Ergnuor\DomainModel\Criteria\OrderMapper\ArrayOrderMapper;
+use Ergnuor\DomainModel\Criteria\OrderMapper\OrderMapperInterface;
+use Ergnuor\DomainModel\Criteria\SpecificExpressionMapper\Doctrine\DoctrineORMExpressionMapper;
+use Ergnuor\DomainModel\DataGetter\DoctrineQueryLanguageQueryBuilderDataGetter;
 use Doctrine\ORM\QueryBuilder;
 
 trait DoctrineQueryBuilderTableDataGatewayTrait
@@ -45,7 +47,7 @@ trait DoctrineQueryBuilderTableDataGatewayTrait
         ?int $offset = null,
         int $hydrationMode = \Doctrine\ORM\Query::HYDRATE_OBJECT
     ): array {
-        $queryExecutor = $this->createDoctrineQueryBuilderQueryExecutor(
+        $dataGetter = $this->createDoctrineQueryBuilderDataGetter(
             $queryBuilder,
             $this->getFieldMap(),
             $hydrationMode
@@ -53,7 +55,7 @@ trait DoctrineQueryBuilderTableDataGatewayTrait
 
         $this->addConstantFilters($expression);
 
-        return $queryExecutor->getListResult(
+        return $dataGetter->getListResult(
             $expression,
             $orderBy,
             $limit,
@@ -61,25 +63,34 @@ trait DoctrineQueryBuilderTableDataGatewayTrait
         );
     }
 
-    private function createDoctrineQueryBuilderQueryExecutor(
+    private function createDoctrineQueryBuilderDataGetter(
         QueryBuilder $queryBuilder,
         ?array $fieldMap = null,
         int $hydrationMode = \Doctrine\ORM\Query::HYDRATE_OBJECT,
-    ): DoctrineQueryBuilderQueryExecutor {
-        $mapper = new DoctrineExpressionMapper($fieldMap);
+    ): DoctrineQueryLanguageQueryBuilderDataGetter {
+        $mapper = new DoctrineORMExpressionMapper($fieldMap);
 
         $this->configureMapper($mapper);
 
-        return new DoctrineQueryBuilderQueryExecutor(
+        $orderMapper = new ArrayOrderMapper();
+        $this->configureOrderMapper($orderMapper);
+
+        return new DoctrineQueryLanguageQueryBuilderDataGetter(
             $queryBuilder,
             $mapper,
+            $orderMapper,
             $this->serializer,
             $hydrationMode
         );
     }
 
-    protected function configureMapper(DoctrineExpressionMapper $mapper): void
+    protected function configureMapper(DoctrineORMExpressionMapper $mapper): void
     {
+    }
+
+    protected function configureOrderMapper(OrderMapperInterface $orderMapper): void
+    {
+
     }
 
     abstract protected function getFieldMap(): array;
@@ -139,14 +150,14 @@ trait DoctrineQueryBuilderTableDataGatewayTrait
     protected function doCount(?ExpressionInterface $expression = null): int
     {
         $queryBuilder = $this->createCountQueryBuilder();
-        $queryExecutor = $this->createDoctrineQueryBuilderQueryExecutor(
+        $dataGetter = $this->createDoctrineQueryBuilderDataGetter(
             $queryBuilder,
             $this->getFieldMap()
         );
 
         $this->addConstantFilters($expression);
 
-        return (int)$queryExecutor->getScalarResult($expression);
+        return (int)$dataGetter->getScalarResult($expression);
     }
 
     abstract protected function createCountQueryBuilder(): QueryBuilder;

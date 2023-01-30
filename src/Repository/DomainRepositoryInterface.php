@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\Repository;
 
-use Ergnuor\DomainModel\DataAccess\Expression\ExpressionInterface;
+use Ergnuor\DomainModel\Criteria\Expression\ExpressionInterface;
 
 /**
  * @template T

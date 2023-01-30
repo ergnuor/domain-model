@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\Specification;
 
-use Ergnuor\DomainModel\DataAccess\Expression\CompositeExpression;
-use Ergnuor\DomainModel\DataAccess\Expression\ExpressionInterface;
+use Ergnuor\DomainModel\Criteria\Expression\CompositeExpression;
+use Ergnuor\DomainModel\Criteria\Expression\ExpressionInterface;
 use Ergnuor\DomainModel\Entity\DomainAggregateInterface;
 
 class CompositeSpecification extends AbstractSpecification
