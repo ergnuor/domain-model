@@ -75,7 +75,7 @@ class EventManager
     }
 
     /**
-     * Собирает события в общий массив и возвращает еще не обработанные события для конкретного момента диспетчеризации
+     * Gathers events and returns unprocessed events for a specific dispatch moment
      *
      * @return array
      */

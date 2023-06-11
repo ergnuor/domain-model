@@ -13,16 +13,35 @@
   "repositories": [
     {
       "type": "vcs",
-      "url": "git@bitbucket.org:Ergnuor/ergnuormapping.git"
+      "url": "git@bitbucket.org:Ergnuor/ergnuor-mapping.git"
+    },
+    {
+      "type": "vcs",
+      "url": "git@bitbucket.org:Ergnuor/ergnuor-criteria.git"
+    },
+    {
+      "type": "vcs",
+      "url": "git@bitbucket.org:Ergnuor/ergnuor-data-getter.git"
+    },
+    {
+      "type": "vcs",
+      "url": "git@bitbucket.org:Ergnuor/ergnuor-serializer.git"
     }
   ],
   "require": {
     "php": ">=8.1",
+    "doctrine/instantiator": "^2.0",
+    "ergnuor/criteria": "0.1.0",
+    "ergnuor/data-getter": "0.1.0",
     "ergnuor/mapping": "^0.1.0",
-    "symfony/event-dispatcher": "^6.0",
-    "symfony/property-access": "^6.0",
-    "symfony/property-info": "^6.0",
-    "symfony/serializer": "^6.0"
+    "ergnuor/serializer": "^0.1.0",
+    "psr/container": "^2.0",
+    "symfony/event-dispatcher": "^6.3",
+    "symfony/property-access": "^6.3",
+    "symfony/property-info": "^6.3"
+  },
+  "suggest": {
+    "doctrine/orm": "For Doctrine ORM implementations"
   },
   "autoload": {
     "psr-4": {"Ergnuor\\DomainModel\\": "src/"}

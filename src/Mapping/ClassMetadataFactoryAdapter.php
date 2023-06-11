@@ -81,7 +81,7 @@ class ClassMetadataFactoryAdapter extends AbstractClassMetadataFactoryAdapter
         $properties = [];
         $propertyNamesByClassName = [];
 
-        // Свойства собираем в порядке от родителя к потомку
+        // We collect properties in order from parent to child
         foreach ($reversedClassHierarchy as $currentClassName => $currentClassNameReflectionClass) {
             foreach ($currentClassNameReflectionClass->getProperties() as $property) {
 
@@ -143,7 +143,7 @@ class ClassMetadataFactoryAdapter extends AbstractClassMetadataFactoryAdapter
             }
         }
 
-        // ID поле ищем в порядке от потомка к родителю
+        // We are looking for the ID field in order from child to parent
         $isIdFound = false;
         foreach (array_reverse($reversedClassHierarchy) as $currentClassName => $currentClassNameReflectionClass) {
             foreach ($propertyNamesByClassName[$currentClassName] as $propertyName) {
@@ -166,7 +166,7 @@ class ClassMetadataFactoryAdapter extends AbstractClassMetadataFactoryAdapter
             $classMetadata->mapField($fieldMapping);
         }
 
-        //todo искать ли фабричные методы в родительских классах?
+        //todo whether to look for factory methods in parent classes?
         foreach ($classNameReflectionClass->getMethods() as $method) {
             $methodAnnotations = $this->reader->getMethodAnnotations($method);
 
@@ -257,15 +257,15 @@ class ClassMetadataFactoryAdapter extends AbstractClassMetadataFactoryAdapter
         mixed $currentClassNameReflectionClass,
         ReflectionExtractor $reflectionExtractor,
     ): array {
-        //Смотрим сначала в рамках основного класса,
-        //т.к. методы расположенные в родительских классах (даже приватные) доступны через рефлексию и относительно основного класса
+        //We first look within the main class,
+        //since methods located in parent classes (even private ones) are available through reflection even relative to the main class
         $readInfo = $reflectionExtractor->getReadInfo($className, $property->getName());
 
         if ($readInfo !== null) {
             $fieldMapping = $this->setReadingInfo($readInfo, $classNameReflectionClass, $fieldMapping);
         } else {
 
-            //Смотрим в рамках текущего (в итерации по дереву) класса
+            //Looking within the current class in the hierarchy
             $readInfo = $reflectionExtractor->getReadInfo($currentClassName, $property->getName());
 
             if ($readInfo !== null) {

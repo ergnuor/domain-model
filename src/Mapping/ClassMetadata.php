@@ -9,8 +9,7 @@ use Ergnuor\DomainModel\Entity\DomainEntityInterface;
 use Doctrine\Instantiator\Instantiator;
 
 /**
- *
- * todo убедиться, что после изменений в этом классе он все еще может кешироваться. (Этот комментарий удалять не стоит, пока не появится соответствующий тест кейс)
+ * todo make sure that after changes to this class it can still be cached
  */
 class ClassMetadata implements ClassMetadataInterface
 {
@@ -206,7 +205,7 @@ class ClassMetadata implements ClassMetadataInterface
     }
 
     /**
-     * Временный метод, пока не разберемся с композитными идентификаторами
+     * Temporary method until we implement composite identifiers
      *
      * @param DomainAggregateInterface|DomainEntityInterface $entity
      * @return int

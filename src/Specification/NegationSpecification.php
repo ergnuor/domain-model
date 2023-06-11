@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\Specification;
 
-use Ergnuor\DomainModel\Criteria\Expression\ExpressionInterface;
-use Ergnuor\DomainModel\Criteria\ExpressionBuilder as expr;
+use Ergnuor\Criteria\Expression\ExpressionInterface;
+use Ergnuor\Criteria\ExpressionBuilder as expr;
 use Ergnuor\DomainModel\Entity\DomainAggregateInterface;
 
 class NegationSpecification extends AbstractSpecification

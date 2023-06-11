@@ -5,34 +5,59 @@ declare(strict_types=1);
 namespace Ergnuor\DomainModel\Repository;
 
 
-use Ergnuor\DomainModel\Criteria\Expression\ExpressionInterface;
-use Ergnuor\DomainModel\DataGetter\DataGetterInterface;
+use Ergnuor\DataGetter\DataGetterInterface;
 
-abstract class AbstractDataGetterDomainRepository extends AbstractDomainRepository
+/**
+ * @template TEntity
+ * @template TExpression
+ * @template TParameters
+ * @template TOrder
+ * @extends  AbstractMappedCriteriaDomainRepository<TEntity, TExpression, TParameters, TOrder>
+ */
+abstract class AbstractDataGetterDomainRepository extends AbstractMappedCriteriaDomainRepository
 {
-    protected function getRawList(
-        ?ExpressionInterface $expression = null,
-        ?array $orderBy = null,
+    /**
+     * @inheritDoc
+     */
+    protected function doGetRawList(
+        $mappedExpression,
+        $mappedParameters,
+        $mappedOrderBy,
         $limit = null,
         $offset = null
     ): array {
         $dataGetter = $this->createListDataGetter();
 
-        return $dataGetter->getListResult(
-            $expression,
-            $orderBy,
+        $listResult = $dataGetter->getListResult(
+            $mappedExpression,
+            $mappedParameters,
+            $mappedOrderBy,
             $limit,
             $offset,
         );
+
+        return $this->transformListResultToArray($listResult);
     }
 
     abstract protected function createListDataGetter(): DataGetterInterface;
 
-    protected function doCount(?ExpressionInterface $expression = null): int
+    /**
+     * @param $listResult
+     * @return array<array>
+     */
+    protected function transformListResultToArray($listResult): array
+    {
+        return $listResult;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function doGetCount($mappedExpression, $mappedParameters): int
     {
         $dataGetter = $this->createCountDataGetter();
 
-        return (int)$dataGetter->getScalarResult($expression);
+        return (int)$dataGetter->getScalarResult($mappedExpression, $mappedParameters);
     }
 
     abstract protected function createCountDataGetter(): DataGetterInterface;

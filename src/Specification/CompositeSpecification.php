@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\Specification;
 
-use Ergnuor\DomainModel\Criteria\Expression\CompositeExpression;
-use Ergnuor\DomainModel\Criteria\Expression\ExpressionInterface;
+use Ergnuor\Criteria\Expression\CompositeExpression;
+use Ergnuor\Criteria\Expression\ExpressionInterface;
 use Ergnuor\DomainModel\Entity\DomainAggregateInterface;
 
 class CompositeSpecification extends AbstractSpecification
@@ -14,17 +14,26 @@ class CompositeSpecification extends AbstractSpecification
     public const TYPE_OR = 'OR';
 
     private string $type;
-    /** @var SpecificationInterface[] */
+    /** @var array<SpecificationInterface> */
     private array $specifications;
 
+    /**
+     * @param string $type
+     * @param array<SpecificationInterface> $specifications
+     */
     public function __construct(string $type, array $specifications)
     {
         $this->setType($type);
 
         foreach ($specifications as $specification) {
             if (!($specification instanceof SpecificationInterface)) {
-                throw new \RuntimeException(sprintf('Specification given to composite specification must implement "%s".',
-                    SpecificationInterface::class));
+                throw new \RuntimeException(
+                    sprintf(
+                        'The class "%s" must implement "%s" interface.',
+                        get_debug_type($specification),
+                        SpecificationInterface::class
+                    )
+                );
             }
 
             $this->specifications[] = $specification;

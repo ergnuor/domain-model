@@ -15,7 +15,7 @@ use Ergnuor\DomainModel\EntityManager\UnitOfWork\Event;
 use Ergnuor\DomainModel\EntityManager\UnitOfWork\EntityCollector;
 use Ergnuor\DomainModel\EntityManager\UnitOfWork\EventManager;
 use Ergnuor\DomainModel\Mapping\ClassMetadata;
-use Ergnuor\DomainModel\Serializer\Normalizer\DateTimeNormalizer;
+use Ergnuor\Serializer\Normalizer\DateTimeNormalizer;
 use Ergnuor\DomainModel\Serializer\Normalizer\DomainEntityNormalizer;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -381,8 +381,6 @@ class UnitOfWork implements UnitOfWorkInterface
     /**
      * @param DomainAggregateInterface $entity
      * @return array
-     *
-     * todo нужен ли метод?
      */
     private function getEntityIdentifierValues(DomainAggregateInterface $entity): array
     {

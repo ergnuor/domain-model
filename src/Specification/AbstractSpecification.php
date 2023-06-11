@@ -31,9 +31,9 @@ abstract class AbstractSpecification implements SpecificationInterface
         );
     }
 
-    protected function buildExpressionFromArray(array $arrayExpression): \Ergnuor\DomainModel\Criteria\Expression\ExpressionInterface
+    protected function buildExpressionFromArray(array $arrayExpression): \Ergnuor\Criteria\Expression\ExpressionInterface
     {
-        $expressionBuilder = new \Ergnuor\DomainModel\Criteria\ExpressionHelper\FromArrayExpressionBuilder();
+        $expressionBuilder = new \Ergnuor\Criteria\ExpressionHelper\FromArrayExpressionBuilder();
         return $expressionBuilder->build($arrayExpression);
     }
 }

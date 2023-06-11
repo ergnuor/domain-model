@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\Serializer\Normalizer;
 
-use Ergnuor\DomainModel\Entity\DomainAggregateInterface;
 use Ergnuor\DomainModel\Entity\DomainEntityInterface;
-use Ergnuor\DomainModel\EntityManager\EntityManager;
 use Ergnuor\DomainModel\EntityManager\UnitOfWork;
+use Ergnuor\Mapping\ClassMetadataFactoryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\PropertyInfo\PropertyTypeExtractorInterface;
 use Symfony\Component\Serializer\Mapping\ClassDiscriminatorResolverInterface;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 
-class DomainEntityNormalizer extends \Ergnuor\DomainModel\Serializer\Normalizer\BaseObjectNormalizer
+class DomainEntityNormalizer extends \Ergnuor\Serializer\Normalizer\ObjectNormalizer
 {
-    public const NORMALIZE_FOR_PERSISTER = 'normalizeForPersister';
+    public const NORMALIZE_FOR_PERSISTER = __CLASS__ . 'normalizeForPersister';
 
-    private EntityManager $domainEntityManager;
+    private ClassMetadataFactoryInterface $domainEntityClassMetadataFactory;
+
+    private array $attributesCache = [];
 
     public function __construct(
+        ClassMetadataFactoryInterface $domainEntityClassMetadataFactory,
         NameConverterInterface $nameConverter = null,
         PropertyAccessorInterface $propertyAccessor = null,
         PropertyTypeExtractorInterface $propertyTypeExtractor = null,
@@ -28,34 +29,20 @@ class DomainEntityNormalizer extends \Ergnuor\DomainModel\Serializer\Normalizer\
         callable $objectClassResolver = null,
         array $defaultContext = []
     ) {
-
-        // не используем class metadata
+        // we do not use class metadata
         parent::__construct(
             null, $nameConverter, $propertyAccessor, $propertyTypeExtractor,
             $classDiscriminatorResolver, $objectClassResolver, $defaultContext
         );
-    }
 
-    /**
-     * @required
-     *
-     * //todo разобраться с циклическими зависимостями. Пока передаем зависимость при помощи сеттера
-     */
-    public function setDomainEntityManager(EntityManager $domainEntityManager)
-    {
-        $this->domainEntityManager = $domainEntityManager;
-    }
+        $this->defaultContext = array_merge(
+            $this->defaultContext,
+            [
+                self::NORMALIZE_FOR_PERSISTER => false,
+            ]
+        );
 
-    protected function getAdditionalCacheKeyDataToSerialize(?string $format, array $context): array
-    {
-        $normalizeForPersisterContext = false;
-        if (isset($context[self::NORMALIZE_FOR_PERSISTER])) {
-            $normalizeForPersisterContext = $context[self::NORMALIZE_FOR_PERSISTER];
-        }
-
-        return [
-            'normalizeForPersister' => $normalizeForPersisterContext,
-        ];
+        $this->domainEntityClassMetadataFactory = $domainEntityClassMetadataFactory;
     }
 
     public function hasCacheableSupportsMethod(): bool
@@ -65,18 +52,12 @@ class DomainEntityNormalizer extends \Ergnuor\DomainModel\Serializer\Normalizer\
 
     public function supportsDenormalization($data, string $type, string $format = null)
     {
-        return (
-            is_subclass_of($type, DomainAggregateInterface::class, true) ||
-            is_subclass_of($type, DomainEntityInterface::class, true)
-        );
+        return is_subclass_of($type, DomainEntityInterface::class);
     }
 
     public function supportsNormalization($data, string $format = null)
     {
-        return (
-            $data instanceof DomainAggregateInterface ||
-            $data instanceof DomainEntityInterface
-        );
+        return $data instanceof DomainEntityInterface;
     }
 
     protected function instantiateObject(
@@ -98,21 +79,21 @@ class DomainEntityNormalizer extends \Ergnuor\DomainModel\Serializer\Normalizer\
 
     private function getClassMetadata(string $className): \Ergnuor\DomainModel\Mapping\ClassMetadata
     {
-        $classMetadata = $this->domainEntityManager->getClassMetadata($className);
+        $classMetadata = $this->domainEntityClassMetadataFactory->getMetadataFor($className);
         assert($classMetadata instanceof \Ergnuor\DomainModel\Mapping\ClassMetadata);
 
         return $classMetadata;
     }
 
     /**
-     * @param $classOrObject
+     * @param string|object $classOrObject
      * @param array $context
      * @param bool $attributesAsString
-     * @return false
+     * @return array|bool
      *
-     * Мы и так берем перечень атрибутов состоящий из полей сущности @see \Ergnuor\DomainModel\Serializer\Normalizer\DomainEntityNormalizer::getAttributes.
-     * То есть нам не нужна дополнительная логика для определения перечня доступных полей.
-     * Symfony штуки типа "группы сериализации" тут не работают
+     * We already take the list of attributes from entity (@see \Ergnuor\DomainModel\Serializer\Normalizer\DomainEntityNormalizer::getAttributes),
+     * that is, we do not need additional logic to determine the list of available attributes.
+     * Symfony serialization groups don't work here
      */
     protected function getAllowedAttributes(
         string|object $classOrObject,
@@ -122,27 +103,70 @@ class DomainEntityNormalizer extends \Ergnuor\DomainModel\Serializer\Normalizer\
         return false;
     }
 
+    public function normalize($object, string $format = null, array $context = [])
+    {
+        /**
+         * Base normalizer can ignore calls to uninitialized properties. We do not want to ignore them in domain entities.
+         * {@see \Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer::isUninitializedValueError}
+         */
+        $context[self::SKIP_UNINITIALIZED_VALUES] = false;
+
+        return parent::normalize($object, $format, $this->normalizeContext($context));
+    }
+
+    /**
+     * We normalize the context for ease of use and for uniformity,
+     * because the context is used when generating the caching key in the @see ObjectNormalizer::getCacheKey method
+     */
+    private function normalizeContext(array $context): array
+    {
+        $context = array_replace(
+            $this->defaultContext,
+            $context
+        );
+
+        $context[self::NORMALIZE_FOR_PERSISTER] = (bool)$context[self::NORMALIZE_FOR_PERSISTER];
+
+        return $context;
+    }
+
+    public function denormalize(mixed $data, string $type, string $format = null, array $context = [])
+    {
+        return parent::denormalize($data, $type, $format, $this->normalizeContext($context));
+    }
+
     protected function getAttributes(object $object, ?string $format, array $context): array
     {
+        $isNormalizeForPersister = $context[self::NORMALIZE_FOR_PERSISTER];
+
+        $class = $this->objectClassResolver ? ($this->objectClassResolver)($object) : \get_class($object);
+        $key = $class . '-' . $isNormalizeForPersister ? 'for-persister' : 'not-for-persister' . $context['cache_key'];
+
+
+        if (isset($this->attributesCache[$key])) {
+            return $this->attributesCache[$key];
+        }
+
         $classMetadata = $this->getClassMetadata(get_class($object));
 
-        if (
-            !isset($context[self::NORMALIZE_FOR_PERSISTER]) ||
-            !$context[self::NORMALIZE_FOR_PERSISTER]
-        ) {
-            return $classMetadata->getFieldNames();
-        }
-        
-        $fieldNames = [];
-        foreach ($classMetadata->getFieldNames() as $fieldName) {
-            if ($classMetadata->isEntityField($fieldName)) {
-                continue;
+        if (!$isNormalizeForPersister) {
+            $attributes = $classMetadata->getFieldNames();
+        } else {
+
+            $attributes = [];
+            foreach ($classMetadata->getFieldNames() as $fieldName) {
+                if ($classMetadata->isEntityField($fieldName)) {
+                    continue;
+                }
+
+                $attributes[] = $fieldName;
             }
-
-            $fieldNames[] = $fieldName;
         }
 
-        return $fieldNames;
+        $this->attributesCache[$key] = $attributes;
+
+
+        return $attributes;
 
 //        dd(
 //            $fieldNames,
@@ -173,9 +197,8 @@ class DomainEntityNormalizer extends \Ergnuor\DomainModel\Serializer\Normalizer\
                 return $classMetadata->getFieldValue($object, $attribute);
             }
         } catch (\Error $e) {
-
             /**
-             * Базовый нормализатор игнорирует обращения к не инициализированным свойствам. А мы не хотим такое игнорировать в доменных сущностях.
+             * Base normalizer can ignore calls to uninitialized properties. We do not want to ignore them in domain entities.
              * {@see \Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer::isUninitializedValueError}
              */
             throw new DomainEntityNormalizerException(
@@ -198,19 +221,8 @@ class DomainEntityNormalizer extends \Ergnuor\DomainModel\Serializer\Normalizer\
         $classMetadata = $this->getClassMetadata(get_class($object));
 
         if ($classMetadata->hasField($attribute)) {
-//            dump([
-//                $attribute,
-//                $value,
-//            ]);
-
             $classMetadata->setFieldValue($object, $attribute, $value);
         } else {
-//            dd([
-//                '~~~~~~',
-//                $attribute,
-//                $value,
-//            ]);
-
             parent::setAttributeValue($object, $attribute, $value, $format, $context);
         }
     }

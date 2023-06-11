@@ -3,17 +3,44 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\Transaction;
 
-use Ergnuor\DomainModel\DependencyInjection\DoctrineEntityListDependencyTrait;
+use Doctrine\ORM\EntityManagerInterface;
 
 class DoctrineTransactionManager implements TransactionManagerInterface
 {
-    use DoctrineEntityListDependencyTrait;
+    /** @var EntityManagerInterface[] */
+    private array $entityManagers;
 
     private bool $isTransactionActive = false;
 
     public function __construct(array $entityManagers)
     {
         $this->setEntityManagers($entityManagers);
+    }
+
+    private function setEntityManagers(array $entityManagers): void
+    {
+        if (empty($entityManagers)) {
+            throw new \RuntimeException(
+                sprintf(
+                    'Empty entity manager list passed to "%s"',
+                    get_class($this)
+                )
+            );
+        }
+
+        foreach ($entityManagers as $entityManager) {
+            if (!($entityManager instanceof EntityManagerInterface)) {
+                throw new \RuntimeException(
+                    sprintf(
+                        'Expected "%s" instance in "%s"',
+                        EntityManagerInterface::class,
+                        get_class($this)
+                    )
+                );
+            }
+
+            $this->entityManagers[] = $entityManager;
+        }
     }
 
     public function beginTransaction(): void

@@ -4,36 +4,39 @@ declare(strict_types=1);
 
 namespace Ergnuor\DomainModel\Repository;
 
-use Ergnuor\DomainModel\Criteria\ExpressionBuilder as expr;
-use Ergnuor\DomainModel\Criteria\Expression\ExpressionInterface;
-use Ergnuor\DomainModel\Criteria\ExpressionHelper\ExpressionNormalizer;
+use Ergnuor\Criteria\ExpressionBuilder as expr;
+use Ergnuor\Criteria\Expression\ExpressionInterface;
+use Ergnuor\Criteria\ExpressionHelper\ExpressionNormalizer;
 use Ergnuor\DomainModel\EntityManager\EntityManagerInterface;
-use Symfony\Component\Serializer\Serializer;
 
+/**
+ * @template TEntity
+ * @implements DomainRepositoryInterface<TEntity>
+ */
 abstract class AbstractDomainRepository implements DomainRepositoryInterface
 {
     protected EntityManagerInterface $domainEntityManager;
-    protected Serializer $serializer;
     private string $className;
 
     public function __construct(
         string $className,
-        EntityManagerInterface $domainEntityManager,
-        Serializer $serializer
+        EntityManagerInterface $domainEntityManager
     ) {
         $this->className = $className;
         $this->domainEntityManager = $domainEntityManager;
-        $this->serializer = $serializer;
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function findById(mixed $id): ?object
     {
         return $this->findOneBy($this->getIdCriteria($id));
     }
 
+    /**
+     * @inheritDoc
+     */
     final public function findOneBy(array|ExpressionInterface $expression): ?object
     {
         $result = $this->findBy($expression);
@@ -50,7 +53,7 @@ abstract class AbstractDomainRepository implements DomainRepositoryInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     final public function findBy(
         array|ExpressionInterface|null $expression = null,
@@ -81,10 +84,10 @@ abstract class AbstractDomainRepository implements DomainRepositoryInterface
      * @param array|null $orderBy
      * @param int|null $limit
      * @param int|null $offset
-     * @return array
+     * @return array<array>
      */
     abstract protected function getRawList(
-        ?ExpressionInterface $expression = null,
+        ExpressionInterface|null $expression = null,
         ?array $orderBy = null,
         ?int $limit = null,
         ?int $offset = null
@@ -149,12 +152,12 @@ abstract class AbstractDomainRepository implements DomainRepositoryInterface
 
     public function count(array|ExpressionInterface|null $expression = null): int
     {
-        return $this->doCount(
+        return $this->getCount(
             $this->prepareExpression($expression)
         );
     }
 
-    abstract protected function doCount(?ExpressionInterface $expression = null): int;
+    abstract protected function getCount(ExpressionInterface|null $expression = null): int;
 
     public function getClassName(): string
     {

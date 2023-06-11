@@ -13,9 +13,9 @@ use Ergnuor\DomainModel\RegistryInterface;
  * @template TExpression
  * @template TParameters
  * @template TOrder
- * @extends  AbstractDataGetterDomainRepository<TEntity, TExpression, TParameters, TOrder>
+ * @extends  AbstractMappedCriteriaDomainRepository<TEntity, TExpression, TParameters, TOrder>
  */
-abstract class AbstractDataGetterServiceDomainRepository extends AbstractDataGetterDomainRepository
+abstract class AbstractMappedCriteriaServiceDomainRepository extends AbstractMappedCriteriaDomainRepository
 {
     public function __construct(
         string $className,
